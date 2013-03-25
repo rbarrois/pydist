@@ -9,6 +9,10 @@ It aims to support the following distributions:
 - Gentoo
 
 
+Code is available at https://github.com/rbarrois/pydist
+
+Pydist supports Python 2.6, 2.7, 3.2, 3.3.
+
 Concepts
 --------
 
