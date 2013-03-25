@@ -1,0 +1,11 @@
+*.pyc
+.*.swp
+.coverage
+MANIFEST
+build/
+dist/
+htmlcov/
+docs/_build
+docs/_static
+docs/_templates
+.tox
