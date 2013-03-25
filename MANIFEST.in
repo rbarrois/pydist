@@ -1,0 +1,11 @@
+include LICENSE README
+
+# Companion data
+recursive-include tests *.py
+recursive-include tests/testdata *.tar *.gz *.bz2 *.zip *.tbz *.tgz PKG-INFO .keepdir
+
+# Doc
+include doc/Makefile doc/make.bat
+recursive-include doc *.py *.rst
+include doc/_static/.keep_dir
+prune doc/_build
