@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import os.path
-import StringIO
 
 from pydist import locators
 
-from .compat import mock, unittest
+from .compat import mock, make_io, unittest
 
 
 class ReaderTestCase(unittest.TestCase):
@@ -17,13 +18,14 @@ class ReaderTestCase(unittest.TestCase):
                 return path == 'foo-0.1.0/PKG-INFO'
 
             def _open_pkg_info(self, path):
-                return StringIO.StringIO('<the_data>')
+                return make_io(b'<the_data>')
 
         cls.FakeReader = FakeReader
 
     def test_base(self):
         r = locators.BaseReader('/foo')
-        self.assertEqual("BaseReader('/foo')", repr(r))
+        self.assertIn('/foo', repr(r))
+        self.assertIn('BaseReader', repr(r))
 
     def test_naive(self):
         r = locators.BaseReader('')
@@ -40,7 +42,7 @@ class ReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"<the_data>", data.read())
+        self.assertEqual("<the_data>", data.read())
 
 
 class FSReaderTestCase(unittest.TestCase):
@@ -62,7 +64,7 @@ class FSReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs1\n", data.read())
+        self.assertEqual("fs1\n", data.read())
 
     def test_found_noversion(self):
         """Finding the PKG-INFO file under $pkg/PKG-INFO."""
@@ -70,7 +72,7 @@ class FSReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.4.3')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs2\n", data.read())
+        self.assertEqual("fs2\n", data.read())
 
     def test_found_alt(self):
         """Finding the PKG-INFO file under $pkg/$version/PKG-INFO."""
@@ -78,7 +80,7 @@ class FSReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs3\n", data.read())
+        self.assertEqual("fs3\n", data.read())
 
     def test_found_root(self):
         """Finding the PKG-INFO at the root of the directory."""
@@ -86,7 +88,7 @@ class FSReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('bar', '4.3.2')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs4\n", data.read())
+        self.assertEqual("fs4\n", data.read())
 
 
 class ZipReaderTestCase(unittest.TestCase):
@@ -112,7 +114,7 @@ class ZipReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs1\n", data.read())
+        self.assertEqual("fs1\n", data.read())
 
     def test_found_noversion(self):
         """Finding the PKG-INFO file under $pkg/PKG-INFO."""
@@ -120,7 +122,7 @@ class ZipReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.4.3')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs2\n", data.read())
+        self.assertEqual("fs2\n", data.read())
 
     def test_found_alt(self):
         """Finding the PKG-INFO file under $pkg/$version/PKG-INFO."""
@@ -128,7 +130,7 @@ class ZipReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs3\n", data.read())
+        self.assertEqual("fs3\n", data.read())
 
     def test_found_root(self):
         """Finding the PKG-INFO at the root of the directory."""
@@ -136,7 +138,7 @@ class ZipReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('bar', '4.3.2')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs4\n", data.read())
+        self.assertEqual("fs4\n", data.read())
 
 
 class TarReaderTestCase(unittest.TestCase):
@@ -164,7 +166,7 @@ class TarReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs1\n", data.read())
+        self.assertEqual("fs1\n", data.read())
 
     def test_found_noversion(self):
         """Finding the PKG-INFO file under $pkg/PKG-INFO."""
@@ -172,7 +174,7 @@ class TarReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.4.3')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs2\n", data.read())
+        self.assertEqual("fs2\n", data.read())
 
     def test_found_alt(self):
         """Finding the PKG-INFO file under $pkg/$version/PKG-INFO."""
@@ -180,7 +182,7 @@ class TarReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('foo', '0.1.0')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs3\n", data.read())
+        self.assertEqual("fs3\n", data.read())
 
     def test_found_root(self):
         """Finding the PKG-INFO at the root of the directory."""
@@ -188,7 +190,7 @@ class TarReaderTestCase(unittest.TestCase):
 
         data = r.pkg_info('bar', '4.3.2')
         self.assertIsNotNone(data)
-        self.assertEqual(u"fs4\n", data.read())
+        self.assertEqual("fs4\n", data.read())
 
 
 class TarGzReaderTestCase(TarReaderTestCase):
@@ -239,7 +241,7 @@ class DiggingDirectoryLocatorTestCase(unittest.TestCase):
         self.assertIn('0.2.0', dists)
 
         dist = dists['0.2.0']
-        self.assertEqual(u"UNKNOWN", dist.metadata['author'])
+        self.assertEqual("UNKNOWN", dist.metadata['author'])
 
     def test_known_project_pkg_info(self):
         l = locators.DiggingDirectoryLocator(self.root)
@@ -247,11 +249,11 @@ class DiggingDirectoryLocatorTestCase(unittest.TestCase):
         self.assertIn('0.2.0', dists)
 
         dist = dists['0.2.0']
-        self.assertEqual(u"Raphaël Barrois", dist.metadata['author'])
-        self.assertEqual(u"Some random test package", dist.metadata['summary'])
-        self.assertEqual(u"BSD", dist.metadata['license'])
+        self.assertEqual("Raphaël Barrois", dist.metadata['author'])
+        self.assertEqual("Some random test package", dist.metadata['summary'])
+        self.assertEqual("BSD", dist.metadata['license'])
         self.assertEqual(
-            [u"pydist", u"foo", u"test"],
+            ["pydist", "foo", "test"],
             dist.metadata['keywords'],
         )
 

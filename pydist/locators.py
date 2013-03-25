@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import codecs
 import logging
 import os.path
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 class BaseReader(object):
     def __init__(self, filename, **kwargs):
         self.filename = filename
-        logger.debug(u"Opening %s with %r", filename, self)
+        logger.debug("Opening %s with %r", filename, self)
         super(BaseReader, self).__init__(**kwargs)
 
     def _file_exists(self, path):
@@ -53,7 +55,7 @@ class BaseReader(object):
         """Retrieve the contents of the PKG-INFO file."""
         for path in self._make_paths(package, version):
             if self._file_exists(path):
-                logger.debug(u"PKG-INFO found at %s in %s", path, self.filename)
+                logger.debug("PKG-INFO found at %s in %s", path, self.filename)
                 return self._decode(self._open_pkg_info(path))
 
     def __repr__(self):
@@ -69,7 +71,7 @@ class FSReader(BaseReader):
         return os.path.exists(self._path(path))
 
     def _open_pkg_info(self, path):
-        return open(self._path(path), 'r')
+        return open(self._path(path), 'rb')
 
 
 class ZipReader(BaseReader):
@@ -154,7 +156,7 @@ class DiggingDirectoryLocator(locators.DirectoryLocator):
             try:
                 md = distribution.metadata
                 md.read_file(pkg_info)
-                logger.debug(u"Found metadata %r(%r) for %s in %s",
+                logger.debug("Found metadata %r(%r) for %s in %s",
                         md, vars(md), filename, pkg_info)
             finally:
                 pkg_info.close()
