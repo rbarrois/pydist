@@ -1,6 +1,6 @@
 import codecs
 import logging
-import os
+import os.path
 import zipfile
 import tarfile
 
@@ -14,18 +14,22 @@ PKG_INFO_NAME = 'PKG-INFO'
 logger = logging.getLogger(__name__)
 
 
-class Reader(object):
+class BaseReader(object):
     def __init__(self, filename, **kwargs):
         self.filename = filename
         logger.debug(u"Opening %s with %r", filename, self)
-        super(Reader, self).__init__(**kwargs)
+        super(BaseReader, self).__init__(**kwargs)
 
     def _file_exists(self, path):
-        """Tests whether a given inner path exists."""
+        """Tests whether a given inner path exists.
+
+        Should be overridden in subclasses."""
         return False
 
-    def _open_pkg_info(self, path):
+    def _open_pkg_info(self, path):  # pragma: no cover
         """Opens the PKG-INFO file.
+
+        Should be overridden in subclasses.
 
         Returns:
             file-like object.
@@ -46,6 +50,7 @@ class Reader(object):
         return reader(fileobj)
 
     def pkg_info(self, package, version):
+        """Retrieve the contents of the PKG-INFO file."""
         for path in self._make_paths(package, version):
             if self._file_exists(path):
                 logger.debug(u"PKG-INFO found at %s in %s", path, self.filename)
@@ -55,40 +60,55 @@ class Reader(object):
         return '%s(%r)' % (self.__class__.__name__, self.filename)
 
 
-class FSReader(Reader):
+class FSReader(BaseReader):
 
     def _path(self, path):
         return os.path.join(self.filename, path)
 
     def _file_exists(self, path):
-        return os.exists(self._path(path))
+        return os.path.exists(self._path(path))
 
     def _open_pkg_info(self, path):
         return open(self._path(path), 'r')
 
 
-class ZipReader(Reader):
+class ZipReader(BaseReader):
     def __init__(self, filename, **kwargs):
         super(ZipReader, self).__init__(filename, **kwargs)
-        self.zfile = zipfile.ZipFile(self.filename, 'r')
+        try:
+            self.zfile = zipfile.ZipFile(self.filename, 'r')
+        except zipfile.BadZipfile:
+            self.zfile = None
 
     def _file_exists(self, path):
+        if self.zfile is None:
+            return False
+
         try:
-            self.zf.getinfo(path)
+            self.zfile.getinfo(path)
         except KeyError:
             return False
         return True
 
     def _open_pkg_info(self, path):
-        return self.zf.open(path, 'r')
+        if self.zfile is None:
+            return None
+
+        return self.zfile.open(path, 'r')
 
 
-class TarReader(Reader):
+class TarReader(BaseReader):
     def __init__(self, filename, **kwargs):
         super(TarReader, self).__init__(filename, **kwargs)
-        self.tarfile = tarfile.open(self.filename, encoding='utf-8')
+        try:
+            self.tarfile = tarfile.open(self.filename, encoding='utf-8')
+        except tarfile.ReadError:
+            self.tarfile = None
 
     def _file_exists(self, path):
+        if self.tarfile is None:
+            return None
+
         try:
             info = self.tarfile.getmember(path)
         except KeyError:
@@ -96,6 +116,9 @@ class TarReader(Reader):
         return info.isfile()
 
     def _open_pkg_info(self, path):
+        if self.tarfile is None:
+            return None
+
         return self.tarfile.extractfile(path)
 
 
